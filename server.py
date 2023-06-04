@@ -1,5 +1,5 @@
+import os
 import socket
-import subprocess
 import threading
 
 # Инициализация игрового поля
@@ -26,6 +26,11 @@ def handle_client(conn, _):
         if data == 'restart':
             restart()
             continue
+
+        if data == 'close':
+            print('Client has been closed')
+            print('Aborting server')
+            os.abort()
         # Обработка данных от клиента и отправка ответа
         # в data приходит координата нажатой кнопки (по типу 0, 1  => 0 - строка, 1 - столбец)
         response = process_data(data)

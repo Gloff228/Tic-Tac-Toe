@@ -1,3 +1,4 @@
+import os
 import socket
 import tkinter as tk
 from tkinter import messagebox
@@ -40,38 +41,44 @@ def send_data(button):
 
 def start_data_thread():
     server_thread = threading.Thread(target=get_data)
+    server_thread.daemon = True
     server_thread.start()
 
 
 def get_data():
-    while True:
-        response = s.recv(1024).decode()
-        if not response:
-            break
+    try:
+        while True:
+            response = s.recv(1024).decode()
+            if not response:
+                Exception("Нет ответа от сервера")
 
-        data = response.split(',')
+            data = response.split(',')
 
-        result = data[0]  # принимает информацию о состоянии игры
-        board_state = data[1:]  # принимает состояние доски
+            result = data[0]  # принимает информацию о состоянии игры
+            board_state = data[1:]  # принимает состояние доски
 
-        if result == "valid":
-            change_player()
-            # Обновление игрового поля на основе полученного состояния
-            if concurrent_player == player:
-                update_board(board_state)
-            else:
+            if result == "valid":
+                change_player()
+                # Обновление игрового поля на основе полученного состояния
+                if concurrent_player == player:
+                    update_board(board_state)
+                else:
+                    update_board_other_player_move(board_state)
+            elif result == "invalid":
+                messagebox.showerror("Недопустимый ход", "Это поле уже занято. Выберите другое поле.")
+            elif result[:7] == "Победил":
                 update_board_other_player_move(board_state)
-        elif result == "invalid":
-            messagebox.showerror("Недопустимый ход", "Это поле уже занято. Выберите другое поле.")
-        elif result[:7] == "Победил":
-            update_board_other_player_move(board_state)
-            messagebox.showinfo("Игра завершена", result)
-            reset_game()
-        elif result == "draw":
-            update_board_other_player_move(board_state)
-            messagebox.showinfo("Игра завершена", "Ничья!")
-            reset_game()
-    s.close()
+                messagebox.showinfo("Игра завершена", result)
+                reset_game()
+            elif result == "draw":
+                update_board_other_player_move(board_state)
+                messagebox.showinfo("Игра завершена", "Ничья!")
+                reset_game()
+
+    except Exception as e:
+        print(e)
+        s.close()
+        os.abort()
 
 
 def update_board(board_state):
@@ -117,6 +124,12 @@ def main():
     # Создаем графическое окно игры
     window = tk.Tk()
     window.title("Игрок " + player)
+
+    def on_closing():
+        window.destroy()
+        s.send('close'.encode())
+
+    window.protocol("WM_DELETE_WINDOW", on_closing)
 
     # Создаем кнопки для игрового поля
     global buttons
