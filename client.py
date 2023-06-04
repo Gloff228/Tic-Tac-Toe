@@ -3,6 +3,8 @@ import tkinter as tk
 from tkinter import messagebox
 import threading
 
+player = ''
+
 
 def connect_to_server():
     try:
@@ -14,7 +16,15 @@ def connect_to_server():
         s = socket.socket()
         s.connect((host, port))
 
-        start_data_thread()
+        while True:
+            response = s.recv(1024).decode()
+            if not response:
+                break
+            global player
+            player = response
+
+            start_data_thread()
+            break
 
     except socket.error as msg:
         print("Ошибка при подключении к серверу: " + str(msg))
@@ -84,7 +94,7 @@ def main():
 
     # Создаем графическое окно игры
     window = tk.Tk()
-    window.title("Крестики-нолики")
+    window.title("Игрок " + player)
 
     # Создаем кнопки для игрового поля
     global buttons

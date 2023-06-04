@@ -1,9 +1,11 @@
 import socket
 import threading
 
+
 # Инициализация игрового поля
 board = [[' ' for _ in range(3)] for _ in range(3)]
 current_player = 'X'  # Текущий игрок
+players = ['X', 'O']
 
 clients_sockets = []
 
@@ -40,6 +42,8 @@ def start_server():
             conn, addr = s.accept()
             print("Подключение от:", addr)
             clients_sockets.append(conn)
+
+            conn.sendall(players[connected_players].encode())
 
             # Обработка клиента в отдельном потоке
             client_thread = threading.Thread(target=handle_client, args=(conn, addr))
