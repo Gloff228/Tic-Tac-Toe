@@ -51,7 +51,7 @@ def get_data():
             break
 
         data = response.split(',')
-        print(data)
+
         result = data[0]  # принимает информацию о состоянии игры
         board_state = data[1:]  # принимает состояние доски
 

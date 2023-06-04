@@ -1,6 +1,6 @@
 import socket
+import subprocess
 import threading
-
 
 # Инициализация игрового поля
 board = [[' ' for _ in range(3)] for _ in range(3)]
@@ -37,6 +37,8 @@ def start_server():
         print("Сервер запущен. Ожидание подключений...")
 
         connected_players = 0  # Счетчик подключенных игроков
+
+        open_clients()  # на стадии разработки для того, чтобы много не тыкать
 
         while connected_players < 2:
             conn, addr = s.accept()
@@ -111,6 +113,11 @@ def check_draw():
 
 def get_board_state():
     return ','.join(''.join(row) for row in board)
+
+
+def open_clients():
+    subprocess.Popen(["python", "client.py"])
+    subprocess.Popen(["python", "client2.py"])
 
 
 if __name__ == "__main__":
