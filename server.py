@@ -17,7 +17,7 @@ def restart():
 
 
 # здесь получается информация от клиентской части
-def handle_client(conn, addr):
+def handle_client(conn, _):
     while True:
         data = conn.recv(1024).decode()
         if not data:
@@ -48,8 +48,6 @@ def start_server():
         print("Сервер запущен. Ожидание подключений...")
 
         connected_players = 0  # Счетчик подключенных игроков
-
-        open_clients()  # на стадии разработки для того, чтобы много не тыкать
 
         while connected_players < 2:
             conn, addr = s.accept()
@@ -125,11 +123,6 @@ def check_draw():
 
 def get_board_state():
     return ','.join(''.join(row) for row in board)
-
-
-def open_clients():
-    subprocess.Popen(["python", "client.py"])
-    subprocess.Popen(["python", "client.py"])
 
 
 if __name__ == "__main__":
