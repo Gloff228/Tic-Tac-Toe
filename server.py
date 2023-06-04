@@ -10,15 +10,26 @@ players = ['X', 'O']
 clients_sockets = []
 
 
+def restart():
+    global board, current_player
+    board = [[' ' for _ in range(3)] for _ in range(3)]
+    current_player = 'X'
+
+
 # здесь получается информация от клиентской части
 def handle_client(conn, addr):
     while True:
         data = conn.recv(1024).decode()
         if not data:
             break
+
+        if data == 'restart':
+            restart()
+            continue
         # Обработка данных от клиента и отправка ответа
         # в data приходит координата нажатой кнопки (по типу 0, 1  => 0 - строка, 1 - столбец)
         response = process_data(data)
+
         # отправляем ответ сразу всем клиентам
         for client_socket in clients_sockets:
             client_socket.sendall(response.encode())
@@ -79,6 +90,7 @@ def process_data(data):
             response = "valid"
             # Смена текущего игрока
             current_player = 'O' if current_player == 'X' else 'X'
+
     else:
         response = "invalid"
 
@@ -117,7 +129,7 @@ def get_board_state():
 
 def open_clients():
     subprocess.Popen(["python", "client.py"])
-    subprocess.Popen(["python", "client2.py"])
+    subprocess.Popen(["python", "client.py"])
 
 
 if __name__ == "__main__":

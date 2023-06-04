@@ -4,13 +4,12 @@ from tkinter import messagebox
 import threading
 
 player = ''
+concurrent_player = 'X'
 
 
 def connect_to_server():
     try:
-        global host
-        global port
-        global s
+        global host, port, s
         host = "127.0.0.1"  # IP-адрес сервера
         port = 12345  # Порт сервера
         s = socket.socket()
@@ -56,14 +55,20 @@ def get_data():
         board_state = data[1:]  # принимает состояние доски
 
         if result == "valid":
+            change_player()
             # Обновление игрового поля на основе полученного состояния
-            update_board(board_state)
+            if concurrent_player == player:
+                update_board(board_state)
+            else:
+                update_board_other_player_move(board_state)
         elif result == "invalid":
             messagebox.showerror("Недопустимый ход", "Это поле уже занято. Выберите другое поле.")
         elif result[:7] == "Победил":
+            update_board_other_player_move(board_state)
             messagebox.showinfo("Игра завершена", result)
             reset_game()
         elif result == "draw":
+            update_board_other_player_move(board_state)
             messagebox.showinfo("Игра завершена", "Ничья!")
             reset_game()
     s.close()
@@ -77,7 +82,18 @@ def update_board(board_state):
             button['state'] = 'disabled' if value != ' ' else 'normal'
 
 
+def update_board_other_player_move(board_state):
+    for i, row in enumerate(board_state):
+        for j, value in enumerate(row):
+            button = buttons[i][j]
+            button['text'] = value
+            button['state'] = 'disabled'
+
+
 def reset_game():
+    global concurrent_player
+    concurrent_player = 'X'
+    s.send('restart'.encode())
     for row in buttons:
         for button in row:
             button['text'] = ' '
@@ -85,8 +101,14 @@ def reset_game():
 
 
 def handle_button_click(button):
-    if button['text'] == ' ':
-        send_data(button)
+    if player == concurrent_player:
+        if button['text'] == ' ':
+            send_data(button)
+
+
+def change_player():
+    global concurrent_player
+    concurrent_player = 'O' if concurrent_player == 'X' else 'X'
 
 
 def main():
@@ -98,6 +120,7 @@ def main():
 
     # Создаем кнопки для игрового поля
     global buttons
+
     buttons = []
     for i in range(3):
         row = []
@@ -108,6 +131,10 @@ def main():
             button.configure(
                 command=lambda b=button: handle_button_click(b))  # Передаем кнопку в функцию handle_button_click
             button.grid(row=i, column=j)
+
+            if concurrent_player != player:
+                button.config(state='disabled')
+
             row.append(button)
         buttons.append(row)
 
